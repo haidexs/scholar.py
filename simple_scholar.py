@@ -1132,8 +1132,8 @@ def txt(querier, with_globals):
         fmt = '[G] %%%ds %%s' % max(0, max_label_len-4)
         for item in items:
             if item[0] is not None:
-                print(fmt % (item[1], item[0]))
-                return item
+                #print(fmt % (item[1], item[0]))
+                return max(item[0], len(querier.articles)) # In case Google does not return "About xx results (xx seconds)"
         if len(items) > 0:
             print
 

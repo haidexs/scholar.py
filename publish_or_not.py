@@ -161,14 +161,14 @@ if __name__ == "__main__":
         querier.send_query(query)
 
         total_publish = txt(querier, with_globals=options.txt_globals)
-        if total_publish[0] == 0:
+        if total_publish == 0:
             flag = "No"
         elif total_publish > 0:
             flag = "Yes"
         else:
             raise ValueError("Returned Total Publication Num is Negative!")
 
-        ofid.write(name + "    " + flag + "    " + str(total_publish[0]) + "\n")
+        ofid.write(name + "    " + flag + "    " + str(total_publish) + "\n")
 
         if options.cookie_file:
             querier.save_cookies()
