@@ -3,18 +3,27 @@ publish_or_not.py
 
 This code checks whether an author has publications in a specified "venue" between two specified years based on Google Scholar search results.
 
+
 It is developed based on Christian's scholar.py project (https://github.com/ckreibich/scholar.py). All modules in scholar.py are included in simple_scholar.py, except for three changes:
+
 1, remove the main();
+
 2, add return value to txt(), so we get the total number of returned results;
+
 3, the total number of returned results is the number of returned articles in the querier when Google Scholar does not return "About xxx results (xxx seconds)" between the search bar and listed articles.
+
 
 Written by Zhulin Yu, Jun. 2017
 
 Essential Input:
 ------
+
 File name of author name list
+
 Phrase that defines the "venue"
+
 Start year
+
 End year
 
 Output:
@@ -22,7 +31,12 @@ Output:
 A .txt file listing authors with publications and total # of publications.
 
 e.g.,:
+
     $ python publish_or_not.py -nl "names.txt" -p "Learning Analytics" --after 2013 --before 2017 -o "output.txt"
+
+
+Following is Christian's original README
+========================================
 
 scholar.py
 ==========
