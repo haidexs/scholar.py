@@ -24,6 +24,10 @@ reload(sys)
 sys.setdefaultencoding('utf8')
 from argparse import ArgumentParser
 
+import progressbar
+bar = progressbar.ProgressBar(maxval=20, \
+    widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+
 if __name__ == "__main__":
     # parse input options
     parser = ArgumentParser()
@@ -124,6 +128,10 @@ if __name__ == "__main__":
     ofid.write("==========================\n")
     ofid.write("Name         Publish?         Total\n")
 
+    crnt_n = 0
+    total_names = len(names)
+    bar.start()
+    bar_progress = 0
     for name in names:
         options.author = name
 
@@ -160,6 +168,12 @@ if __name__ == "__main__":
             options.count = min(options.count, ScholarConf.MAX_PAGE_RESULTS)
             query.set_num_page_results(options.count)
 
+        crnt_n = crnt_n + 1
+        if crnt_n/total_names >= 0.05:
+          bar_progress = bar_progress + 1
+          bar.update(bar_progress)
+          crnt_n = 0
+
         querier.send_query(query)
 
         total_publish = txt(querier, with_globals=options.txt_globals)
@@ -176,3 +190,4 @@ if __name__ == "__main__":
             querier.save_cookies()
 
     ofid.close()
+    bar.finish()
