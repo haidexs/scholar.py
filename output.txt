@@ -1,9 +1,6 @@
 Google Scholar Search Result
 Venue: Learning Analytics
-Years: 2014 - 2017
+Years: None - None
 ==========================
 Name         Publish?         Total
-Roberto Martinez-Maldonado    Yes    1
-Jaclyn Ocumpaugh    Yes    17
-Sean Combs    No    0
-Michael Swart    No    0
+Juraj Nižnan    Yes    2

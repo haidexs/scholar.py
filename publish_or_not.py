@@ -20,6 +20,8 @@
 from simple_scholar import *
 import os
 import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 from argparse import ArgumentParser
 
 if __name__ == "__main__":
