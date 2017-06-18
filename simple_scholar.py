@@ -166,6 +166,8 @@ import optparse
 import os
 import re
 import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 import warnings
 
 # check packages
