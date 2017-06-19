@@ -170,7 +170,6 @@ if __name__ == "__main__":
             options.count = min(options.count, ScholarConf.MAX_PAGE_RESULTS)
             query.set_num_page_results(options.count)
 
-        ipdb.set_trace()
         crnt_n = crnt_n + 1
         bar.update(round(float(crnt_n)/total_names*20))
         # if float(crnt_n)/total_names >= 0.05:
