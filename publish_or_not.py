@@ -24,6 +24,8 @@ reload(sys)
 sys.setdefaultencoding('utf8')
 from argparse import ArgumentParser
 
+import ipdb
+
 import progressbar
 bar = progressbar.ProgressBar(maxval=20, \
     widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
@@ -169,10 +171,11 @@ if __name__ == "__main__":
             query.set_num_page_results(options.count)
 
         crnt_n = crnt_n + 1
-        if crnt_n/total_names >= 0.05:
-          bar_progress = bar_progress + 1
-          bar.update(bar_progress)
-          crnt_n = 0
+        # ipdb.set_trace()
+        if float(crnt_n)/total_names >= 0.05:
+            bar_progress = bar_progress + 1
+            bar.update(bar_progress)
+            crnt_n = 0
 
         querier.send_query(query)
 
