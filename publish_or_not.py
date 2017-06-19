@@ -20,8 +20,8 @@
 from simple_scholar import *
 import os
 import sys
-reload(sys)
-sys.setdefaultencoding('utf8')
+# reload(sys)
+# sys.setdefaultencoding('utf8')
 from argparse import ArgumentParser
 
 import ipdb
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     crnt_n = 0
     total_names = len(names)
     bar.start()
-    bar_progress = 0
+    # bar_progress = 0
     for name in names:
         options.author = name
 
@@ -170,12 +170,13 @@ if __name__ == "__main__":
             options.count = min(options.count, ScholarConf.MAX_PAGE_RESULTS)
             query.set_num_page_results(options.count)
 
+        ipdb.set_trace()
         crnt_n = crnt_n + 1
-        # ipdb.set_trace()
-        if float(crnt_n)/total_names >= 0.05:
-            bar_progress = bar_progress + 1
-            bar.update(bar_progress)
-            crnt_n = 0
+        bar.update(round(float(crnt_n)/total_names*20))
+        # if float(crnt_n)/total_names >= 0.05:
+        #     bar_progress = bar_progress + 1
+        #     bar.update(bar_progress)
+        #     crnt_n = 0
 
         querier.send_query(query)
 
