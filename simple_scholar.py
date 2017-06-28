@@ -180,8 +180,8 @@ try:
     from http.cookiejar import MozillaCookieJar
 except ImportError:
     # Fallback for Python 2
-    from urllib2 import Request, build_opener, HTTPCookieProcessor
-    from urllib import quote, unquote
+    from urllib2 import Request, build_opener, HTTPCookieProcessor, ProxyHandler, HTTPHandler, install_opener
+    from urllib import quote, unquote, urlopen
     from cookielib import MozillaCookieJar
 
 # Import BeautifulSoup -- try 4 first, fall back to older
@@ -246,8 +246,8 @@ class ScholarConf(object):
     VERSION = '2.10'
     LOG_LEVEL = 1
     MAX_PAGE_RESULTS = 10 # Current default for per-page results
-    #SCHOLAR_SITE = 'http://scholar.google.com'
-    SCHOLAR_SITE = 'http://scholar.google.cn'
+    SCHOLAR_SITE = 'http://scholar.google.com'
+    # SCHOLAR_SITE = 'http://scholar.google.cn'
 
     # USER_AGENT = 'Mozilla/5.0 (X11; U; FreeBSD i386; en-US; rv:1.9.2.9) Gecko/20100913 Firefox/3.6.9'
     # Let's update at this point (3/14):
@@ -1021,7 +1021,7 @@ class ScholarQuerier(object):
         ScholarUtils.log('info', 'settings applied')
         return True
 
-    def send_query(self, query):
+    def send_query(self, query, proxy_host_port, agent_str):
         """
         This method initiates a search query (a ScholarQuery instance)
         with subsequent parsing of the response.
@@ -1031,7 +1031,8 @@ class ScholarQuerier(object):
 
         html = self._get_http_response(url=query.get_url(),
                                        log_msg='dump of query response HTML',
-                                       err_msg='results retrieval failed')
+                                       err_msg='results retrieval failed',
+                                       proxy = proxy_host_port, agent = agent_str)
         if html is None:
             return
 
@@ -1089,7 +1090,7 @@ class ScholarQuerier(object):
             ScholarUtils.log('warn', 'could not save cookies file: %s' % msg)
             return False
 
-    def _get_http_response(self, url, log_msg=None, err_msg=None):
+    def _get_http_response(self, url, log_msg=None, err_msg=None, proxy=None, agent=None):
         """
         Helper method, sends HTTP request and returns response payload.
         """
@@ -1100,7 +1101,15 @@ class ScholarQuerier(object):
         try:
             ScholarUtils.log('info', 'requesting %s' % unquote(url))
 
-            req = Request(url=url, headers={'User-Agent': ScholarConf.USER_AGENT})
+            if not proxy:
+                req = Request(url=url, headers={'User-Agent': agent})
+            else:
+                proxies = {'http': 'http://' + proxy}
+                proxy_support = ProxyHandler(proxies)
+                opener = build_opener(proxy_support, HTTPHandler(debuglevel=1))
+                install_opener(opener)
+                req = Request(url=url, headers={'User-Agent': agent})
+            
             hdl = self.opener.open(req)
             html = hdl.read()
 
@@ -1157,6 +1166,22 @@ def citation_export(querier):
     articles = querier.articles
     for art in articles:
         print(art.as_citation() + '\n')
+
+def proxy_check(proxy_host_port):
+    try:
+        urlopen(
+            "https://google.com",
+            proxies = {'http': proxy_host_port}
+        )
+        # proxy_live = True
+    except:
+        proxy_live = False
+        print(proxy_host_port + " : Proxy Not Working. Moving to next!\n")
+    else:
+        proxy_live = True
+        # print(proxy_host_port + " : Wokring!\n")
+
+    return proxy_live
 
 
 # def main():

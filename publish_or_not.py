@@ -20,9 +20,12 @@
 from simple_scholar import *
 import os
 import sys
+import random
+import time
 # reload(sys)
 # sys.setdefaultencoding('utf8')
 from argparse import ArgumentParser
+from fake_useragent import UserAgent
 
 import ipdb
 
@@ -96,6 +99,18 @@ if __name__ == "__main__":
                      help='Show version information')
     #parser.add_argument_group(group)
 
+    group4 = parser.add_argument_group('group4', 'Proxy settings')
+
+    group4.add_argument('-pl', '--proxylist',
+                      dest='proxylist_file', type = str,
+                      help="File name of the proxies list.")
+    # group4.add_argument('-al', '--agentlist',
+    #                     dest = 'agentlist_file', type = str,
+    #                     help = 'File name of the agent list')
+    group4.add_argument('-po', '--proxyon',
+                        dest = 'proxy_switch', type = int,
+                        help = '1 = proxy on; 0 = proxy off')
+
     options = parser.parse_args()
 
     file_namelist = options.namelist
@@ -129,6 +144,23 @@ if __name__ == "__main__":
     ofid.write("Years: " + str(options.after) + " - " + str(options.before) + "\n")
     ofid.write("==========================\n")
     ofid.write("Name         Publish?         Total\n")
+
+    # Using proxies to scrape
+    if options.proxy_switch == 1:
+        if not os.path.exists(options.proxylist_file):
+            raise ValueError("Proxy list file does not exist!")
+        else:
+            with open(options.proxylist_file) as f:
+                proxies_all = f.readlines()
+                proxies_all = [x.strip() for x in proxies_all]
+
+        ua = UserAgent()
+        ua.update()
+        print("Agent Database Prepared (based on UserAgent)!\n")
+
+        req_intv_mean = 3
+        req_intv_std = 9
+
 
     crnt_n = 0
     total_names = len(names)
@@ -177,20 +209,37 @@ if __name__ == "__main__":
         #     bar.update(bar_progress)
         #     crnt_n = 0
 
-        querier.send_query(query)
+        # Choose one proxy and check if it is working.
+        if options.proxy_switch == 1:
+            proxy_host_port = random.choice(proxies_all)
+            while not proxy_check(proxy_host_port):
+                proxy_host_port = random.choice(proxies_all)
 
-        total_publish = txt(querier, with_globals=options.txt_globals)
-        if total_publish == 0:
-            flag = "No"
-        elif total_publish > 0:
-            flag = "Yes"
+            agent_str = str(ua.random)
+            req_intv = abs(random.normalvariate(req_intv_mean, req_intv_std))
+            time.sleep(req_intv)
         else:
-            raise ValueError("Returned Total Publication Num is Negative!")
+            proxy_host_port = ''
+            agent_str = ''
 
-        ofid.write(name + "    " + flag + "    " + str(total_publish) + "\n")
+        returned_html = querier.send_query(query, proxy_host_port, agent_str)
+        if returned_html == None:
+            flag = "Failure"
+            total_publish = 0
+            print("Request denied by Google! Proxy: " + proxy_host_port + "\n")
+        else:
+            total_publish = txt(querier, with_globals=options.txt_globals)
+            if total_publish == 0:
+                flag = "No"
+            elif total_publish > 0:
+                flag = "Yes"
+            else:
+                raise ValueError("Returned Total Publication Num is Negative!")
 
-        if options.cookie_file:
-            querier.save_cookies()
+            ofid.write(name + "    " + flag + "    " + str(total_publish) + "\n")
+
+            if options.cookie_file:
+                querier.save_cookies()
 
     ofid.close()
     bar.finish()
