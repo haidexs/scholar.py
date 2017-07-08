@@ -1034,9 +1034,10 @@ class ScholarQuerier(object):
                                        err_msg='results retrieval failed',
                                        proxy = proxy_host_port, agent = agent_str)
         if html is None:
-            return
+            return None
 
         self.parse(html)
+        return 0
 
     def get_citation_data(self, article):
         """
@@ -1179,7 +1180,7 @@ def proxy_check(proxy_host_port):
         print(proxy_host_port + " : Proxy Not Working. Moving to next!\n")
     else:
         proxy_live = True
-        # print(proxy_host_port + " : Wokring!\n")
+        print(proxy_host_port + " : Wokring!\n")
 
     return proxy_live
 

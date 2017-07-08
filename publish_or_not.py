@@ -128,7 +128,7 @@ if __name__ == "__main__":
         raise ValueError("Start year is after end year!")
 
     if os.path.exists(output_file):
-        overwrite = raw_input("Output file" + output_file + " exists. Want to overwrite (y/n)?: ")
+        overwrite = raw_input("Output file " + output_file + " exists. Want to overwrite (y/n)?: ")
         if overwrite == "y" or overwrite == "Y":
             ofid = open(output_file, 'w')
         elif overwrite == "n" or overwrite == "N":
@@ -158,8 +158,11 @@ if __name__ == "__main__":
         ua.update()
         print("Agent Database Prepared (based on UserAgent)!\n")
 
-        req_intv_mean = 3
-        req_intv_std = 9
+        rest_mean = 60*10 # seconds
+        rest_std = 60*2 # seconds
+        rest_n_request = 15
+        req_intv_mean = 90
+        req_intv_std = 35
 
 
     crnt_n = 0
@@ -204,6 +207,11 @@ if __name__ == "__main__":
 
         crnt_n = crnt_n + 1
         bar.update(round(float(crnt_n)/total_names*20))
+        if crnt_n%rest_n_request == 0:
+            rest_time = abs(random.normalvariate(rest_mean, rest_std))
+            print(str(rest_n_request) + " requests finished! Rest for " + str(rest_time) + " seconds!\n")
+            time.sleep(rest_time)
+            
         # if float(crnt_n)/total_names >= 0.05:
         #     bar_progress = bar_progress + 1
         #     bar.update(bar_progress)
@@ -217,7 +225,9 @@ if __name__ == "__main__":
 
             agent_str = str(ua.random)
             req_intv = abs(random.normalvariate(req_intv_mean, req_intv_std))
+            print("Sleep " + str(req_intv) + " sec.\n")
             time.sleep(req_intv)
+
         else:
             proxy_host_port = ''
             agent_str = ''
@@ -227,8 +237,10 @@ if __name__ == "__main__":
             flag = "Failure"
             total_publish = 0
             print("Request denied by Google! Proxy: " + proxy_host_port + "\n")
+            ofid.write(name + "    " + flag + "    " + str(total_publish) + "\n")
         else:
             total_publish = txt(querier, with_globals=options.txt_globals)
+            print("Result Returned: " + name + " through " + proxy_host_port)
             if total_publish == 0:
                 flag = "No"
             elif total_publish > 0:
