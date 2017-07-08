@@ -1180,7 +1180,7 @@ def proxy_check(proxy_host_port):
         print(proxy_host_port + " : Proxy Not Working. Moving to next!\n")
     else:
         proxy_live = True
-        print(proxy_host_port + " : Wokring!\n")
+        print(proxy_host_port + " : Working!\n")
 
     return proxy_live
 
