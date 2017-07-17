@@ -304,5 +304,11 @@ if __name__ == "__main__":
 
         remain_names = remain_names.remove(name)
 
+        remain_namelist_file = ("remain_" + options.namelist.split('/')[-1])
+            with open(remain_namelist_file, 'w') as f:
+                for ni in remain_names:
+                    f.write(ni + "\n")
+        print("Remaining names output to " + remain_namelist_file + "!\n")
+
     # ofid.close()
     bar.finish()
