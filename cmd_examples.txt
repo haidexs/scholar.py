@@ -1,0 +1,2 @@
+python scholar.py -c 1 --author "albert einstein" --phrase "quantum theory"
+python publish_or_not.py -nl "../test_1000names.txt" -p "Learning Analytics" --after 2015 --before 2017 -o "output_1000.txt" -pl "../proxy_list" -po 1

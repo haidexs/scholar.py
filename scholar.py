@@ -1025,6 +1025,13 @@ class ScholarQuerier(object):
         if html is None:
             return
 
+        # detect whether regarded as robot by Google
+        robot_flag = html.find(
+            'Sorry, we can\'t verify that you\'re not a robot when JavaScript is turned off.')
+        if robot_flag != -1:
+            html = None
+            raise ValueError('Regarded as a robot!')
+
         self.parse(html)
 
     def get_citation_data(self, article):

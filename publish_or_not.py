@@ -22,6 +22,7 @@ import os
 import sys
 import random
 import time
+import pandas
 # reload(sys)
 # sys.setdefaultencoding('utf8')
 from argparse import ArgumentParser
@@ -32,6 +33,31 @@ import ipdb
 import progressbar
 bar = progressbar.ProgressBar(maxval=20, \
     widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+
+def send_email(err_msg):
+    # Import smtplib for the actual sending function
+    import smtplib
+
+    # Import the email modules we'll need
+    from email.mime.text import MIMEText
+
+    # Message Content
+    msg = MIMEText(err_msg)
+    msg['Subject'] = "Google Scholar Requests Blocked"
+    sender = "haidexs@gmail.com"
+    msg['From'] = sender
+    # recipients = ['zy2247@tc.columbia.edu ']
+    recipients = ['zy2247@tc.columbia.edu']
+    msg['To'] = ", ".join(recipients)
+
+    # Send through Gmail
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.ehlo()
+    server.starttls()
+    server.login("haidexs", "EdAnna070315")
+
+    server.sendmail(sender, recipients, msg.as_string())
+    server.quit()
 
 if __name__ == "__main__":
     # parse input options
@@ -113,6 +139,7 @@ if __name__ == "__main__":
 
     options = parser.parse_args()
 
+    # read names from namelist file
     file_namelist = options.namelist
 
     if not os.path.exists(file_namelist):
@@ -144,6 +171,7 @@ if __name__ == "__main__":
     ofid.write("Years: " + str(options.after) + " - " + str(options.before) + "\n")
     ofid.write("==========================\n")
     ofid.write("Name         Publish?         Total\n")
+    ofid.close()
 
     # Using proxies to scrape
     if options.proxy_switch == 1:
@@ -168,10 +196,15 @@ if __name__ == "__main__":
     crnt_n = 0
     total_names = len(names)
     bar.start()
-    # bar_progress = 0
+    
+    # Start scraping for each name
+    remain_names = names
     for name in names:
+        
+        # for this name
         options.author = name
 
+        # setting up request
         querier = ScholarQuerier()
         settings = ScholarSettings()
         querier.apply_settings(settings)
@@ -205,6 +238,7 @@ if __name__ == "__main__":
             options.count = min(options.count, ScholarConf.MAX_PAGE_RESULTS)
             query.set_num_page_results(options.count)
 
+        # show progress
         crnt_n = crnt_n + 1
         bar.update(round(float(crnt_n)/total_names*20))
         if crnt_n%rest_n_request == 0:
@@ -212,11 +246,6 @@ if __name__ == "__main__":
             print(str(rest_n_request) + " requests finished! Rest for " + str(rest_time) + " seconds!\n")
             time.sleep(rest_time)
             
-        # if float(crnt_n)/total_names >= 0.05:
-        #     bar_progress = bar_progress + 1
-        #     bar.update(bar_progress)
-        #     crnt_n = 0
-
         # Choose one proxy and check if it is working.
         if options.proxy_switch == 1:
             proxy_host_port = random.choice(proxies_all)
@@ -224,20 +253,37 @@ if __name__ == "__main__":
                 proxy_host_port = random.choice(proxies_all)
 
             agent_str = str(ua.random)
+
+            # sleep for random seconds defined by req_intv_mean and req_intv_std
             req_intv = abs(random.normalvariate(req_intv_mean, req_intv_std))
             print("Sleep " + str(req_intv) + " sec.\n")
-            time.sleep(req_intv)
+            if crnt_n > 1:
+                time.sleep(req_intv)
 
         else:
             proxy_host_port = ''
             agent_str = ''
 
+        # Send request
         returned_html = querier.send_query(query, proxy_host_port, agent_str)
+        
+        # Check if valid result returned
         if returned_html == None:
             flag = "Failure"
             total_publish = 0
-            print("Request denied by Google! Proxy: " + proxy_host_port + "\n")
-            ofid.write(name + "    " + flag + "    " + str(total_publish) + "\n")
+            print("Request denied by Google! Proxy: " + proxy_host_port)
+            # we are blocked by Google.
+
+            # print the remaining names to a new name list file
+            remain_namelist_file = ("remain_" + time.strftime("%m-%d-%y-%H%M") + "_" +
+                options.namelist.split('/')[-1])
+            with open(remain_namelist_file, 'w') as f:
+                for ni in remain_names:
+                    f.write(ni + "\n")
+            print("Remaining names output to " + remain_namelist_file + "!\n")
+            send_email("Blocked! Remaining names are in " + remain_namelist_file + ".")
+            raise ValueError("Blocked by Google!")
+
         else:
             total_publish = txt(querier, with_globals=options.txt_globals)
             print("Result Returned: " + name + " through " + proxy_host_port)
@@ -248,10 +294,15 @@ if __name__ == "__main__":
             else:
                 raise ValueError("Returned Total Publication Num is Negative!")
 
-            ofid.write(name + "    " + flag + "    " + str(total_publish) + "\n")
-
             if options.cookie_file:
                 querier.save_cookies()
 
-    ofid.close()
+        # write to output file
+        ofid2 = open(output_file, 'aw')
+        ofid2.write(name + "    " + flag + "    " + str(total_publish) + "\n")
+        ofid2.close()
+
+        remain_names = remain_names.remove(name)
+
+    # ofid.close()
     bar.finish()

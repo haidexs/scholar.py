@@ -248,6 +248,8 @@ class ScholarConf(object):
     MAX_PAGE_RESULTS = 10 # Current default for per-page results
     SCHOLAR_SITE = 'http://scholar.google.com'
     # SCHOLAR_SITE = 'http://scholar.google.cn'
+    # SCHOLAR_SITE = 'http://scholar.google.jp'
+    # SCHOLAR_SITE = 'http://scholar.google.at'
 
     # USER_AGENT = 'Mozilla/5.0 (X11; U; FreeBSD i386; en-US; rv:1.9.2.9) Gecko/20100913 Firefox/3.6.9'
     # Let's update at this point (3/14):
@@ -1036,8 +1038,17 @@ class ScholarQuerier(object):
         if html is None:
             return None
 
+        # detect whether regarded as robot by Google
+        robot_flag = html.find(
+            'Sorry, we can\'t verify that you\'re not a robot when JavaScript is turned off.')
+        if robot_flag != -1:
+            html = None
+            print('Regarded as a robot!')
+            return None
+            # raise ValueError('Regarded as a robot!')
+
         self.parse(html)
-        return 0
+        # return 0
 
     def get_citation_data(self, article):
         """
