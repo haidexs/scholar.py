@@ -1048,7 +1048,7 @@ class ScholarQuerier(object):
             # raise ValueError('Regarded as a robot!')
 
         self.parse(html)
-        # return 0
+        return 0
 
     def get_citation_data(self, article):
         """

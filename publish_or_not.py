@@ -198,7 +198,7 @@ if __name__ == "__main__":
     bar.start()
     
     # Start scraping for each name
-    remain_names = names
+    remain_names = names[:]
     for name in names:
         
         # for this name
@@ -302,12 +302,12 @@ if __name__ == "__main__":
         ofid2.write(name + "    " + flag + "    " + str(total_publish) + "\n")
         ofid2.close()
 
-        remain_names = remain_names.remove(name)
+        remain_names.remove(name)
 
         remain_namelist_file = ("remain_" + options.namelist.split('/')[-1])
-            with open(remain_namelist_file, 'w') as f:
-                for ni in remain_names:
-                    f.write(ni + "\n")
+        with open(remain_namelist_file, 'w') as f:
+            for ni in remain_names:
+                f.write(ni + "\n")
         print("Remaining names output to " + remain_namelist_file + "!\n")
 
     # ofid.close()
