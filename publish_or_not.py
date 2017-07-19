@@ -186,11 +186,16 @@ if __name__ == "__main__":
         ua.update()
         print("Agent Database Prepared (based on UserAgent)!\n")
 
-        rest_mean = 60*10 # seconds
-        rest_std = 60*2 # seconds
+        # stop sending requests after every 15 requests
+        rest_mean = 100 # seconds
+        rest_std = 100 # seconds
+        rest_min = 500 # seconds
         rest_n_request = 15
-        req_intv_mean = 90
-        req_intv_std = 35
+        
+        # sleep for random seconds between each request
+        req_intv_mean = 50
+        req_intv_std = 50
+        req_intv_min = 50
 
 
     crnt_n = 0
@@ -242,7 +247,7 @@ if __name__ == "__main__":
         crnt_n = crnt_n + 1
         bar.update(round(float(crnt_n)/total_names*20))
         if crnt_n%rest_n_request == 0:
-            rest_time = abs(random.normalvariate(rest_mean, rest_std))
+            rest_time = rest_min + abs(random.normalvariate(rest_mean, rest_std))
             print(str(rest_n_request) + " requests finished! Rest for " + str(rest_time) + " seconds!\n")
             time.sleep(rest_time)
             
@@ -255,7 +260,7 @@ if __name__ == "__main__":
             agent_str = str(ua.random)
 
             # sleep for random seconds defined by req_intv_mean and req_intv_std
-            req_intv = abs(random.normalvariate(req_intv_mean, req_intv_std))
+            req_intv = req_intv_min + abs(random.normalvariate(req_intv_mean, req_intv_std))
             print("Sleep " + str(req_intv) + " sec.\n")
             if crnt_n > 1:
                 time.sleep(req_intv)
@@ -294,8 +299,8 @@ if __name__ == "__main__":
             else:
                 raise ValueError("Returned Total Publication Num is Negative!")
 
-            if options.cookie_file:
-                querier.save_cookies()
+            # if options.cookie_file:
+            #     querier.save_cookies()
 
         # write to output file
         ofid2 = open(output_file, 'aw')

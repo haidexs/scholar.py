@@ -811,7 +811,7 @@ class SearchScholarQuery(ScholarQuery):
 
     def set_author(self, author):
         """Sets names that must be on the result's author list."""
-        self.author = author
+        self.author = "\"" + author + "\""
 
     def set_pub(self, pub):
         """Sets the publication in which the result must be found."""

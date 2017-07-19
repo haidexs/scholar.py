@@ -3,11 +3,4 @@ Venue: Learning Analytics
 Years: 2015 - 2017
 ==========================
 Name         Publish?         Total
-Huy Le    Yes    1
-Jane Manning    No    0
-Armando Fox    Yes    1
-Gabriel Trautmann    No    0
-Shaurya Agarwal    No    0
-Amro Khasawneh    No    0
-Ronald Kwan    No    0
-Rich Seiter    No    0
+Wang Li    Yes    2
