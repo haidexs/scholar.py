@@ -811,6 +811,7 @@ class SearchScholarQuery(ScholarQuery):
 
     def set_author(self, author):
         """Sets names that must be on the result's author list."""
+        # with \", Google Scholar will search the full name rather than separate by white space
         self.author = "\"" + author + "\""
 
     def set_pub(self, pub):
