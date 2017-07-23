@@ -23,12 +23,16 @@ import sys
 import random
 import time
 import pandas
+import pandas as pd
+import urllib2
+from urllib2 import build_opener, HTTPCookieProcessor, install_opener
+from cookielib import MozillaCookieJar
 # reload(sys)
 # sys.setdefaultencoding('utf8')
 from argparse import ArgumentParser
 from fake_useragent import UserAgent
 
-import ipdb
+# import ipdb
 
 import progressbar
 bar = progressbar.ProgressBar(maxval=20, \
@@ -123,6 +127,7 @@ if __name__ == "__main__":
                      help='Enable verbose logging to stderr. Repeated options increase detail of debug output.')
     group3.add_argument('-v', '--version', action='store_true', default=False,
                      help='Show version information')
+
     #parser.add_argument_group(group)
 
     group4 = parser.add_argument_group('group4', 'Proxy settings')
@@ -136,6 +141,16 @@ if __name__ == "__main__":
     group4.add_argument('-po', '--proxyon',
                         dest = 'proxy_switch', type = int,
                         help = '1 = proxy on; 0 = proxy off')
+
+    group5 = parser.add_argument_group('group5', 'Random browsing settings')
+
+    group5.add_argument('-rbf', '--random_browse_file',
+                      dest='random_browse_file', type = str,
+                      help = 'The website list file name')
+
+    group5.add_argument('-rb', '--random_browse',
+                      dest = 'random_browse', type = int,
+                      help = 'Whether browse websites randomly? 1=Yes, 0=No')
 
     options = parser.parse_args()
 
@@ -173,6 +188,18 @@ if __name__ == "__main__":
     ofid.write("Name         Publish?         Total\n")
     ofid.close()
 
+    # Set request intervals
+    # stop sending requests after every 15 requests
+    rest_mean = 100 # seconds
+    rest_std = 100 # seconds
+    rest_min = 500 # seconds
+    rest_n_request = 15
+    
+    # sleep for random seconds between each request
+    req_intv_mean = 50
+    req_intv_std = 50
+    req_intv_min = 50
+
     # Using proxies to scrape
     if options.proxy_switch == 1:
         if not os.path.exists(options.proxylist_file):
@@ -186,21 +213,19 @@ if __name__ == "__main__":
         ua.update()
         print("Agent Database Prepared (based on UserAgent)!\n")
 
-        # stop sending requests after every 15 requests
-        rest_mean = 100 # seconds
-        rest_std = 100 # seconds
-        rest_min = 500 # seconds
-        rest_n_request = 15
-        
-        # sleep for random seconds between each request
-        req_intv_mean = 50
-        req_intv_std = 50
-        req_intv_min = 50
-
-
     crnt_n = 0
     total_names = len(names)
     bar.start()
+
+    # Browse a couple of random websites
+    if options.random_browse == 1:
+        websites = pd.read_csv(options.random_browse_file, header = None)
+        websites.columns = ["address"]
+        n_random_browse_min = 5
+
+    # Cookie
+    if options.cookie_file:
+        ScholarConf.COOKIE_JAR_FILE = options.cookie_file
     
     # Start scraping for each name
     remain_names = names[:]
@@ -246,6 +271,8 @@ if __name__ == "__main__":
         # show progress
         crnt_n = crnt_n + 1
         bar.update(round(float(crnt_n)/total_names*20))
+        
+        # take a break for every rest_n_request requests
         if crnt_n%rest_n_request == 0:
             rest_time = rest_min + abs(random.normalvariate(rest_mean, rest_std))
             print(str(rest_n_request) + " requests finished! Rest for " + str(rest_time) + " seconds!\n")
@@ -258,16 +285,16 @@ if __name__ == "__main__":
                 proxy_host_port = random.choice(proxies_all)
 
             agent_str = str(ua.random)
-
-            # sleep for random seconds defined by req_intv_mean and req_intv_std
-            req_intv = req_intv_min + abs(random.normalvariate(req_intv_mean, req_intv_std))
-            print("Sleep " + str(req_intv) + " sec.\n")
-            if crnt_n > 1:
-                time.sleep(req_intv)
-
+        # or just not use proxy.
         else:
             proxy_host_port = ''
-            agent_str = ''
+            agent_str = ScholarConf.USER_AGENT
+
+        # sleep for random seconds defined by req_intv_mean and req_intv_std
+        req_intv = req_intv_min + abs(random.normalvariate(req_intv_mean, req_intv_std))
+        if crnt_n > 1:
+            print("Sleep " + str(req_intv) + " sec.\n")
+            time.sleep(req_intv)
 
         # Send request
         returned_html = querier.send_query(query, proxy_host_port, agent_str)
@@ -299,8 +326,8 @@ if __name__ == "__main__":
             else:
                 raise ValueError("Returned Total Publication Num is Negative!")
 
-            # if options.cookie_file:
-            #     querier.save_cookies()
+            if options.cookie_file:
+                querier.save_cookies()
 
         # write to output file
         ofid2 = open(output_file, 'aw')
@@ -314,6 +341,23 @@ if __name__ == "__main__":
             for ni in remain_names:
                 f.write(ni + "\n")
         print("Remaining names output to " + remain_namelist_file + "!\n")
+
+        # browse websites randomly selected from website list
+        if options.random_browse == 1:
+            n_random_browse = n_random_browse_min + int(abs(random.normalvariate(5, 2)))
+            for i in range(n_random_browse):
+                cjar = MozillaCookieJar()
+                cjar.load(ScholarConf.COOKIE_JAR_FILE)
+                opener = build_opener(HTTPCookieProcessor(cjar))
+                install_opener(opener)
+                url = websites.sample(1)["address"].values[0]
+                req = urllib2.Request(url, headers = {'User-Agent': agent_str})
+                try:
+                    hdl = opener.open(req)
+                except:
+                    continue
+                tmp = hdl.read()
+                cjar.save(ScholarConf.COOKIE_JAR_FILE, ignore_discard=True)
 
     # ofid.close()
     bar.finish()
